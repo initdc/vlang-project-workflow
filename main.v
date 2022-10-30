@@ -1,6 +1,5 @@
 module main
 
-import strconv { v_sprintf }
 import v.pref { get_host_arch, get_host_os }
 import v.util.version { full_v_version }
 
@@ -17,8 +16,7 @@ fn info() string {
 	// https://github.com/vlang/v/blob/master/vlib/v/util/version/version.v#L28
 	ver := full_v_version(false)
 
-	return v_sprintf('OS: %s\n', os_str) + v_sprintf('Architecture: %s\n', *arch_str_ptr) +
-		v_sprintf('Version: %s\n', ver)
+	return 'OS: $os_str\n' + 'Architecture: ${*arch_str_ptr}\n' + 'Version: $ver\n'
 }
 
 fn main() {
