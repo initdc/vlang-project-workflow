@@ -12,11 +12,12 @@ fn info() string {
 	arch := get_host_arch()
 	// https://github.com/vlang/v/blob/master/vlib/v/pref/pref.v#L896
 	arch_str := arch.str()
+	arch_str_ptr := &arch_str
 
 	// https://github.com/vlang/v/blob/master/vlib/v/util/version/version.v#L28
 	ver := full_v_version(false)
 
-	return v_sprintf('OS: %s\n', os_str) + v_sprintf('Architecture: %s\n', arch_str) +
+	return v_sprintf('OS: %s\n', os_str) + v_sprintf('Architecture: %s\n', *arch_str_ptr) +
 		v_sprintf('Version: %s\n', ver)
 }
 
