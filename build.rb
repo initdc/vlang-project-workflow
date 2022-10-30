@@ -1,17 +1,16 @@
 require "./version"
 require "./get-version"
-require "./zig-test"
 
-PROGRAM = "zig-demo"
+PROGRAM = "v-demo"
 # VERSION = "v0.0.1"
-BUILD_CMD = "zig build"
-OUTPUT_ARG = "-p"
+BUILD_CMD = "v ."
+OUTPUT_ARG = "-o"
 RELEASE_BUILD = true
-RELEASE_ARG = RELEASE_BUILD == true ? "-Drelease" : ""
+RELEASE_ARG = RELEASE_BUILD == true ? "-prod" : ""
 RELEASE = RELEASE_BUILD == true ? "release" : "debug"
 # used in this way:
 # BUILD_CMD RELEASE_ARG TARGET_ARG OUTPUT_ARG OUTPUT_PATH
-TEST_CMD = "zig build"
+TEST_CMD = "v test ."
 
 TARGET_DIR = "target"
 DOCKER_DIR = "docker"
@@ -29,7 +28,7 @@ end
 
 # go tool dist list
 # linux only for docker
-GO_ZIG = {
+GO_V = {
     "linux/386": ["i386-linux-gnu", "i386-linux-musl"],
     "linux/amd64": ["x86_64-linux-gnu", "x86_64-linux-musl"],
     "linux/arm": ["arm-linux-gnueabi", "arm-linux-gnueabihf", "arm-linux-musleabi", "arm-linux-musleabihf"],
@@ -148,7 +147,11 @@ targets = TEST_TARGETS if test_bin
 targets = LESS_TARGETS if less_bin
 
 if run_test
-    zig_test catch_error
+    puts TEST_CMD
+    test_result = system TEST_CMD
+    if catch_error and !test_result
+        return
+    end
 end
 
 if clean_all

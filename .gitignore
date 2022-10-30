@@ -1,5 +1,13 @@
-zig-cache/
-zig-out/
+# Binaries for programs and plugins
+main
+vlang-project-workflow
+v-demo
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
+vls.log
 
 target
 upload
