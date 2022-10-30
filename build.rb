@@ -1,16 +1,19 @@
 require "./version"
 require "./get-version"
+require "./zig-linkers"
 
 PROGRAM = "v-demo"
 # VERSION = "v0.0.1"
 BUILD_CMD = "v ."
 OUTPUT_ARG = "-o"
-RELEASE_BUILD = true
+RELEASE_BUILD = false
 RELEASE_ARG = RELEASE_BUILD == true ? "-prod" : ""
 RELEASE = RELEASE_BUILD == true ? "release" : "debug"
 # used in this way:
 # BUILD_CMD RELEASE_ARG TARGET_ARG OUTPUT_ARG OUTPUT_PATH
 TEST_CMD = "v test ."
+
+ZIG_CC = "zig cc -target"
 
 TARGET_DIR = "target"
 DOCKER_DIR = "docker"
@@ -28,7 +31,7 @@ end
 
 # go tool dist list
 # linux only for docker
-GO_V = {
+GO_ZIG = {
     "linux/386": ["i386-linux-gnu", "i386-linux-musl"],
     "linux/amd64": ["x86_64-linux-gnu", "x86_64-linux-musl"],
     "linux/arm": ["arm-linux-gnueabi", "arm-linux-gnueabihf", "arm-linux-musleabi", "arm-linux-musleabihf"],
@@ -194,12 +197,17 @@ for target in targets
     program_bin = !windows ? PROGRAM : "#{PROGRAM}.exe"
     target_bin = !windows ? target : "#{target}.exe"
 
-    target_arg = "-Dtarget=#{target}"
-    cmd = "#{BUILD_CMD} #{RELEASE_ARG} #{target_arg} #{OUTPUT_ARG} #{TARGET_DIR}/#{target}/#{RELEASE}"
+    gen_zig_linkers target, ZIG_CC
+    target_arg = "-os #{os} -cc=#{ZIG_LINKERS_DIR}/#{target}"
+
+    dir = "#{TARGET_DIR}/#{target}/#{RELEASE}"
+    `mkdir -p #{dir}`
+
+    cmd = "#{BUILD_CMD} #{RELEASE_ARG} #{target_arg} #{OUTPUT_ARG} #{dir}/#{program_bin}"
     puts cmd
     system cmd
 
-    existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/bin/#{program_bin}", "#{UPLOAD_DIR}/#{target_bin}"
+    existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/#{program_bin}", "#{UPLOAD_DIR}/#{target_bin}"
 end
 
 GO_ZIG.each do |target_platform, targets|
@@ -218,13 +226,13 @@ GO_ZIG.each do |target_platform, targets|
                     tg_array = target.split("-")
                     abi = tg_array.last
 
-                    existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/bin/#{PROGRAM}", "#{docker}/#{PROGRAM}-#{abi}"
+                    existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/#{PROGRAM}", "#{docker}/#{PROGRAM}-#{abi}"
                     Dir.chdir docker do
                         notExistsThen "ln -s", PROGRAM, "#{PROGRAM}-#{abi}"
                     end
                 end
             else
-                existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/bin/#{PROGRAM}", "#{docker}/#{PROGRAM}"
+                existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/#{PROGRAM}", "#{docker}/#{PROGRAM}"
             end
         end
     else
@@ -237,13 +245,13 @@ GO_ZIG.each do |target_platform, targets|
                 tg_array = target.split("-")
                 abi = tg_array.last
 
-                existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/bin/#{PROGRAM}", "#{docker}/#{PROGRAM}-#{abi}"
+                existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/#{PROGRAM}", "#{docker}/#{PROGRAM}-#{abi}"
                 Dir.chdir docker do
                     notExistsThen "ln -s", PROGRAM, "#{PROGRAM}-#{abi}"
                 end
             end
         else
-            existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/bin/#{PROGRAM}", "#{docker}/#{PROGRAM}"
+            existsThen "ln", "#{TARGET_DIR}/#{target}/#{RELEASE}/#{PROGRAM}", "#{docker}/#{PROGRAM}"
         end
     end
 end

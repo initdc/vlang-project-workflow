@@ -11,3 +11,6 @@ vls.log
 
 target
 upload
+
+zig-linkers/
+zig-targets.txt
