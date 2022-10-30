@@ -1,6 +1,7 @@
 name: Merge or Pull requests
 
 env:
+  V_VERSION: latest
   ZIG_VERSION: master
 
 on:
@@ -17,17 +18,34 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: ubuntu-latest
+            vlang: weekly.2022.40
+          - os: macos-latest
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set vlang version  
+        uses: chelnak/setup-v@v0
+        with:
+          version: ${{ matrix.vlang || env.V_VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set zig version  
         uses: korandoru/setup-zig@v1
         with:
           zig-version: ${{ env.ZIG_VERSION }} 
       - name: Build Artifact
-        run: ruby build.rb test --run-test
+        run: |
+          mkdir -p upload
+          v . -prod -o upload/v-demo              
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
+          name: ${{ matrix.os }}_${{ matrix.vlang || env.V_VERSION }}
           path: "upload/*"
